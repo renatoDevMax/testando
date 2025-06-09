@@ -27,6 +27,28 @@
         padding: 2rem;
         color: white;
         box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+        height: 100vh;
+        position: fixed;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+      }
+
+      .sidebar::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .sidebar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(255, 255, 255, 0.5);
       }
 
       .logo {
@@ -71,6 +93,7 @@
       .main-content {
         flex: 1;
         padding: 2rem;
+        margin-left: 280px; /* Mesma largura do sidebar */
       }
     </style>
     <link
@@ -97,6 +120,18 @@
         <button class='nav-button'>
           <i class='fas fa-search'></i>
           Buscar Id
+        </button>
+        <button class='nav-button'>
+          <i class='fas fa-users'></i>
+          Grupos
+        </button>
+        <button class='nav-button'>
+          <i class='fas fa-bullhorn'></i>
+          Mensagem Venda
+        </button>
+        <button class='nav-button'>
+          <i class='fas fa-user-plus'></i>
+          Mensagem Cadastro
         </button>
       </div>
     </div>
@@ -300,6 +335,94 @@
           <h3>Cliente não encontrado</h3>
           <p>Não foi possível encontrar um cliente com o ID informado.</p>
         </div>
+      </div>
+    </div>
+
+    <!-- Adicionando o componente para listar grupos -->
+    <div id='grupos-panel' class='content-panel' style='display: none;'>
+      <div class='panel-header'>
+        <h2>Grupos WhatsApp</h2>
+      </div>
+      <div class='panel-content'>
+        <div id='carregando-grupos' class='loading-container'>
+          <div class='loading-spinner'></div>
+          <p>Carregando grupos...</p>
+        </div>
+
+        <div id='erro-grupos' class='status-container' style='display: none;'>
+          <div class='status-icon error'>
+            <i class='fas fa-times-circle'></i>
+          </div>
+          <h3>Erro ao Carregar Grupos</h3>
+          <p>Não foi possível carregar os grupos. Verifique se o WhatsApp está
+            autenticado e tente novamente.</p>
+        </div>
+
+        <div id='grupos-lista-container' style='display: none;'>
+          <div id='grupos-lista' class='grupos-scroll'>
+            <!-- Lista de grupos será carregada aqui via JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adicionando o componente para mensagem de venda -->
+    <div id='mensagem-venda-panel' class='content-panel' style='display: none;'>
+      <div class='panel-header'>
+        <h2>Mensagem de Venda</h2>
+      </div>
+      <div class='panel-content'>
+        <form id='mensagem-venda-form' class='form-container'>
+          <div class='form-group'>
+            <label for='mensagem-venda-textarea'>Mensagem:</label>
+            <textarea
+              id='mensagem-venda-textarea'
+              class='form-textarea'
+              placeholder='Digite sua mensagem de venda aqui...'
+              rows='5'
+              required
+            ></textarea>
+          </div>
+
+          <div id='status-mensagem-venda' class='status-container'></div>
+
+          <button type='submit' class='form-button'>
+            <i class='fas fa-paper-plane'></i>
+            Enviar
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Adicionando o componente para mensagem de cadastro -->
+    <div
+      id='mensagem-cadastro-panel'
+      class='content-panel'
+      style='display: none;'
+    >
+      <div class='panel-header'>
+        <h2>Mensagem de Cadastro</h2>
+      </div>
+      <div class='panel-content'>
+        <form id='mensagem-cadastro-form' class='form-container'>
+          <div class='form-group'>
+            <label for='mensagem-cadastro-textarea'>Mensagem:</label>
+            <textarea
+              id='mensagem-cadastro-textarea'
+              class='form-textarea'
+              placeholder='Digite sua mensagem de cadastro aqui...'
+              rows='5'
+              required
+            ></textarea>
+          </div>
+
+          <div id='status-mensagem-cadastro' class='status-container'></div>
+
+          <button type='submit' class='form-button'>
+            <i class='fas fa-paper-plane'></i>
+            Enviar
+          </button>
+        </form>
       </div>
     </div>
 
@@ -748,9 +871,91 @@
         overflow-x: auto;
       }
 
+      /* Estilos para o painel de grupos */
+      .grupos-scroll {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 1rem;
+      }
+
+      .grupo-item {
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #3498db;
+        transition: all 0.3s ease;
+      }
+
+      .grupo-item:hover {
+        background-color: #e3f2fd;
+        transform: translateX(5px);
+      }
+
+      .mensagem-sem-grupos {
+        text-align: center;
+        padding: 2rem;
+        color: #7f8c8d;
+        font-size: 1.1rem;
+      }
+
       /* Remove a senha das informações exibidas */
       .info-item:has(.info-label:contains('Senha')) {
         display: none;
+      }
+
+      /* Estilos específicos para o painel de mensagem de venda */
+      #mensagem-venda-textarea {
+        min-height: 150px;
+        resize: vertical;
+      }
+
+      #status-mensagem-venda {
+        margin: 1rem 0;
+        padding: 1rem;
+        border-radius: 8px;
+        display: none;
+      }
+
+      #status-mensagem-venda.sucesso {
+        background-color: #e3fcef;
+        color: #2ecc71;
+        border-left: 4px solid #2ecc71;
+        display: block;
+      }
+
+      #status-mensagem-venda.erro {
+        background-color: #feeaea;
+        color: #e74c3c;
+        border-left: 4px solid #e74c3c;
+        display: block;
+      }
+
+      /* Estilos específicos para o painel de mensagem de cadastro */
+      #mensagem-cadastro-textarea {
+        min-height: 150px;
+        resize: vertical;
+      }
+
+      #status-mensagem-cadastro {
+        margin: 1rem 0;
+        padding: 1rem;
+        border-radius: 8px;
+        display: none;
+      }
+
+      #status-mensagem-cadastro.sucesso {
+        background-color: #e3fcef;
+        color: #2ecc71;
+        border-left: 4px solid #2ecc71;
+        display: block;
+      }
+
+      #status-mensagem-cadastro.erro {
+        background-color: #feeaea;
+        color: #e74c3c;
+        border-left: 4px solid #e74c3c;
+        display: block;
       }
     </style>
 
@@ -759,5 +964,8 @@
     <script src='/js/mensagem-whatsapp.js'></script>
     <script src='/js/contatos-whatsapp.js'></script>
     <script src='/js/buscar-id.js'></script>
+    <script src='/js/grupos-whatsapp.js'></script>
+    <script src='/js/mensagem-venda.js'></script>
+    <script src='/js/mensagem-cadastro.js'></script>
   </body>
 </html>

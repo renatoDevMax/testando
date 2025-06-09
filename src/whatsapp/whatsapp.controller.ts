@@ -17,7 +17,12 @@ export class WhatsAppController {
 
   @Get('contatos')
   async getContatos() {
-    return await this.whatsappService.getContatos();
+    return this.whatsappService.getContatos();
+  }
+
+  @Get('grupos')
+  async getGrupos() {
+    return this.whatsappService.getGrupos();
   }
 
   @Post('/mensagem')
@@ -29,5 +34,25 @@ export class WhatsAppController {
     );
 
     return { mensagemEnviada: success };
+  }
+
+  @Post('mensagemVenda')
+  async enviarMensagemVenda(@Body() body: { mensagem: string }) {
+    const grupoId = '120363402057047268@g.us';
+    const mensagemEnviada = await this.whatsappService.enviarMensagem(
+      grupoId,
+      body.mensagem,
+    );
+    return { mensagemEnviada };
+  }
+
+  @Post('mensagemCadastro')
+  async enviarMensagemCadastro(@Body() body: { mensagem: string }) {
+    const grupoId = '120363418514145544@g.us';
+    const mensagemEnviada = await this.whatsappService.enviarMensagem(
+      grupoId,
+      body.mensagem,
+    );
+    return { mensagemEnviada };
   }
 }

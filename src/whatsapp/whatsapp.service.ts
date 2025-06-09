@@ -132,6 +132,36 @@ export class WhatsAppService implements OnModuleInit {
     }
   }
 
+  async getGrupos() {
+    if (!this.isAuthenticated) {
+      console.error('Cliente WhatsApp não está autenticado');
+      return { success: false, message: 'Não autenticado', grupos: [] };
+    }
+
+    try {
+      const contatos = await this.client.getContacts();
+      // Filtra apenas os grupos
+      const grupos = contatos
+        .filter((contato) => contato.isGroup)
+        .map((grupo) => ({
+          id: grupo.id._serialized,
+          nome: grupo.name,
+        }));
+
+      return {
+        success: true,
+        grupos: grupos,
+      };
+    } catch (error) {
+      console.error('Erro ao buscar grupos:', error);
+      return {
+        success: false,
+        message: 'Erro ao buscar grupos',
+        grupos: [],
+      };
+    }
+  }
+
   async enviarMensagem(contato: string, mensagem: string): Promise<boolean> {
     // Verifica se o cliente está autenticado
     if (!this.isAuthenticated) {
@@ -140,7 +170,15 @@ export class WhatsAppService implements OnModuleInit {
     }
 
     try {
-      // Formata o número para o padrão do WhatsApp
+      // Verifica se é um ID de grupo (contém @g.us)
+      if (contato.includes('@g.us')) {
+        // Envia a mensagem diretamente para o grupo
+        await this.client.sendMessage(contato, mensagem);
+        console.log(`Mensagem enviada com sucesso para o grupo ${contato}`);
+        return true;
+      }
+
+      // Se não for grupo, formata como número de telefone
       const contatoFormatado = this.formatarNumero(contato);
 
       // Envia a mensagem

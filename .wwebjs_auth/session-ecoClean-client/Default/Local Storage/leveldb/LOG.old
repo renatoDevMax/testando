@@ -1,3 +1,5 @@
-2025/04/29-13:38:45.495 8048 Reusing MANIFEST C:\Users\Eco Clean\Desktop\PROJETO FIDELIDADE\servidor notification\notification-server\.wwebjs_auth\session-ecoClean-client\Default\Local Storage\leveldb/MANIFEST-000001
-2025/04/29-13:38:45.495 8048 Recovering log #3
-2025/04/29-13:38:45.496 8048 Reusing old log C:\Users\Eco Clean\Desktop\PROJETO FIDELIDADE\servidor notification\notification-server\.wwebjs_auth\session-ecoClean-client\Default\Local Storage\leveldb/000003.log 
+2025/06/09-01:39:39.099 5a6c Reusing MANIFEST C:\Users\Eco Clean\Desktop\PROJETO FIDELIDADE\servidor notification\notification-server\.wwebjs_auth\session-ecoClean-client\Default\Local Storage\leveldb/MANIFEST-000001
+2025/06/09-01:39:39.100 5a6c Recovering log #3
+2025/06/09-01:39:39.100 5a6c Level-0 table #3: started
+2025/06/09-01:39:39.103 5a6c Level-0 table #3: 18358 bytes OK
+2025/06/09-01:39:39.105 5a6c Delete type=0 #3
