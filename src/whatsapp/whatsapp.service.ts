@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { Client, LocalAuth } from 'whatsapp-web.js';
+import { Client, LocalAuth, Message } from 'whatsapp-web.js';
 import * as qrcode from 'qrcode';
+import { WhatsAppConfig } from './whatsapp.config';
 
 @Injectable()
 export class WhatsAppService implements OnModuleInit {
@@ -10,28 +11,11 @@ export class WhatsAppService implements OnModuleInit {
   private isInitialized: boolean = false;
 
   constructor() {
-    // Configurações específicas para ambiente containerizado
-    const chromeArgs = [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process',
-      '--disable-gpu',
-    ];
-
     this.client = new Client({
-      puppeteer: {
-        headless: true,
-        args: chromeArgs,
-        executablePath:
-          process.env.NODE_ENV === 'production'
-            ? '/usr/bin/google-chrome-stable'
-            : undefined,
-      },
-      authStrategy: new LocalAuth({ clientId: 'ecoClean-client' }),
+      puppeteer: WhatsAppConfig.puppeteer,
+      authStrategy: new LocalAuth(WhatsAppConfig.authStrategy),
+      webVersion: WhatsAppConfig.webVersion,
+      webVersionCache: WhatsAppConfig.webVersionCache
     });
 
     this.setupEventListeners();
@@ -170,21 +154,49 @@ export class WhatsAppService implements OnModuleInit {
     }
 
     try {
+      let contatoFormatado: string;
+      let mensagemEnviada: Message;
+
       // Verifica se é um ID de grupo (contém @g.us)
       if (contato.includes('@g.us')) {
-        // Envia a mensagem diretamente para o grupo
-        await this.client.sendMessage(contato, mensagem);
-        console.log(`Mensagem enviada com sucesso para o grupo ${contato}`);
-        return true;
+        contatoFormatado = contato;
+      } else {
+        // Se não for grupo, formata como número de telefone
+        contatoFormatado = this.formatarNumero(contato);
       }
 
-      // Se não for grupo, formata como número de telefone
-      const contatoFormatado = this.formatarNumero(contato);
-
-      // Envia a mensagem
-      await this.client.sendMessage(contatoFormatado, mensagem);
-      console.log(`Mensagem enviada com sucesso para ${contatoFormatado}`);
-      return true;
+      // Envia a mensagem com tratamento de erro específico
+      try {
+        mensagemEnviada = await this.client.sendMessage(contatoFormatado, mensagem);
+        
+        // Verifica se a mensagem foi enviada corretamente
+        if (mensagemEnviada && mensagemEnviada.id) {
+          console.log(`Mensagem enviada com sucesso para ${contatoFormatado}`);
+          return true;
+        } else {
+          console.warn('Mensagem enviada mas sem confirmação de ID');
+          return true; // Considera sucesso mesmo sem ID
+        }
+      } catch (sendError) {
+        // Se o erro for relacionado ao serialize, tenta uma abordagem alternativa
+        if (sendError.message && sendError.message.includes('serialize')) {
+          console.warn('Erro de serialização detectado, tentando abordagem alternativa...');
+          
+          // Aguarda um pouco e tenta novamente
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          try {
+            mensagemEnviada = await this.client.sendMessage(contatoFormatado, mensagem);
+            console.log(`Mensagem enviada com sucesso (segunda tentativa) para ${contatoFormatado}`);
+            return true;
+          } catch (retryError) {
+            console.error('Erro na segunda tentativa:', retryError);
+            return false;
+          }
+        } else {
+          throw sendError;
+        }
+      }
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
       return false;
@@ -209,5 +221,61 @@ export class WhatsAppService implements OnModuleInit {
     }
 
     return numeroFormatado;
+  }
+
+  /**
+   * Verifica a saúde do cliente WhatsApp
+   */
+  async verificarSaude(): Promise<{ saudavel: boolean; detalhes: string }> {
+    try {
+      if (!this.isAuthenticated) {
+        return { saudavel: false, detalhes: 'Cliente não autenticado' };
+      }
+
+      // Verifica se o cliente está conectado
+      const info = await this.client.info;
+      if (!info) {
+        return { saudavel: false, detalhes: 'Informações do cliente não disponíveis' };
+      }
+
+      return { saudavel: true, detalhes: 'Cliente funcionando normalmente' };
+    } catch (error) {
+      console.error('Erro ao verificar saúde do cliente:', error);
+      return { saudavel: false, detalhes: `Erro: ${error.message}` };
+    }
+  }
+
+  /**
+   * Reinicializa o cliente em caso de problemas
+   */
+  async reinicializarCliente(): Promise<boolean> {
+    try {
+      console.log('Reinicializando cliente WhatsApp...');
+      
+      if (this.client) {
+        await this.client.destroy();
+      }
+      
+      this.isInitialized = false;
+      this.isAuthenticated = false;
+      this.qrCode = null;
+      
+      // Recria o cliente
+      this.client = new Client({
+        puppeteer: WhatsAppConfig.puppeteer,
+        authStrategy: new LocalAuth(WhatsAppConfig.authStrategy),
+        webVersion: WhatsAppConfig.webVersion,
+        webVersionCache: WhatsAppConfig.webVersionCache
+      });
+
+      this.setupEventListeners();
+      await this.initializeClient();
+      
+      console.log('Cliente WhatsApp reinicializado com sucesso');
+      return true;
+    } catch (error) {
+      console.error('Erro ao reinicializar cliente:', error);
+      return false;
+    }
   }
 }

@@ -1,12 +1,4 @@
-2025/06/09-01:41:07.288 3ff4 Reusing MANIFEST C:\Users\Eco Clean\Desktop\PROJETO FIDELIDADE\servidor notification\notification-server\.wwebjs_auth\session-ecoClean-client\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/06/09-01:41:07.288 3ff4 Recovering log #108
-2025/06/09-01:41:07.324 3ff4 Reusing old log C:\Users\Eco Clean\Desktop\PROJETO FIDELIDADE\servidor notification\notification-server\.wwebjs_auth\session-ecoClean-client\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000108.log 
-2025/06/09-01:41:08.699 3090 Level-0 table #114: started
-2025/06/09-01:41:08.709 3090 Level-0 table #114: 227562 bytes OK
-2025/06/09-01:41:08.710 3090 Delete type=0 #108
-2025/06/09-01:41:08.710 3090 Manual compaction at level-0 from '\x00$\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00%\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/06/09-01:41:09.971 7084 Compacting 1@1 + 2@2 files
-2025/06/09-01:41:10.017 7084 Generated table #115@1: 36732 keys, 2200286 bytes
-2025/06/09-01:41:10.070 7084 Generated table #116@1: 62187 keys, 1832718 bytes
-2025/06/09-01:41:10.070 7084 Compacted 1@1 + 2@2 files => 4033004 bytes
-2025/06/09-01:41:10.071 7084 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/07/11-18:57:43.033 332c Reusing MANIFEST C:\Users\Renato\Desktop\Projetos\Service Notification\servidor-notification-final\.wwebjs_auth\session-ecoClean-client\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/11-18:57:43.034 332c Recovering log #41
+2025/07/11-18:57:43.071 332c Reusing old log C:\Users\Renato\Desktop\Projetos\Service Notification\servidor-notification-final\.wwebjs_auth\session-ecoClean-client\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000041.log 
+2025/07/11-18:57:44.492 43c0 Manual compaction at level-0 from '\x00\x1c\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x1d\x00\x00\x00' @ 0 : 0; will stop at (end)

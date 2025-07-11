@@ -52,6 +52,18 @@ export class AppController {
     return { mensagemEnviada: success };
   }
 
+  @Get('whatsapp/saude')
+  async verificarSaudeWhatsApp() {
+    const saude = await this.whatsappService.verificarSaude();
+    return saude;
+  }
+
+  @Post('whatsapp/reinicializar')
+  async reinicializarWhatsApp() {
+    const sucesso = await this.whatsappService.reinicializarCliente();
+    return { reinicializado: sucesso };
+  }
+
   @Post('adicionar-compra')
   async adicionarCompra(@Body() compraDto: CompraDto) {
     try {
