@@ -72,10 +72,20 @@
 
 ## 🎯 Resultado Esperado
 
-- ✅ Erro `markedUnread` resolvido
+- ✅ Erro `markedUnread` interceptado e tratado (workaround implementado)
 - ✅ Mensagens sendo enviadas corretamente
 - ✅ Melhor compatibilidade com versões recentes do WhatsApp Web
 - ✅ Uso automático da versão mais recente do WhatsApp Web
+
+## ⚠️ Workaround Adicional
+
+Após o deploy inicial, foi detectado que o erro `markedUnread` ainda ocorria. Foi implementado um **workaround robusto** que:
+
+- Detecta o erro `markedUnread` especificamente
+- Verifica se a mensagem foi realmente enviada
+- Considera sucesso mesmo se não conseguir confirmar (pois o erro ocorre após o envio)
+
+Veja `WORKAROUND_MARKEDUNREAD.md` para detalhes completos.
 
 ## 📚 Referências
 
