@@ -246,10 +246,12 @@ export class WhatsAppService implements OnModuleInit {
         await page.evaluate(() => {
           try {
             // Sobrescreve o sendSeen para evitar erro de markedUnread
-            if (typeof window !== 'undefined' && window.WWebJS && window.WWebJS.sendSeen) {
-              const originalSendSeen = window.WWebJS.sendSeen;
+            // Usa type assertion porque WWebJS existe apenas no contexto do navegador
+            const wwebjs = (window as any).WWebJS;
+            if (typeof window !== 'undefined' && wwebjs && wwebjs.sendSeen) {
+              const originalSendSeen = wwebjs.sendSeen;
               
-              window.WWebJS.sendSeen = async function(...args: any[]) {
+              wwebjs.sendSeen = async function(...args: any[]) {
                 try {
                   // Verifica se o objeto chat existe e tem a propriedade markedUnread
                   const chat = args[0];
