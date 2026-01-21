@@ -31,10 +31,5 @@ async function bootstrap() {
   console.log(`Servidor iniciando na porta: ${PORT}`);
 
   await app.listen(PORT);
-  console.log(`✅ Servidor rodando na porta ${PORT}`);
-  console.log(`✅ Healthcheck disponível em http://localhost:${PORT}/`);
 }
-bootstrap().catch((error) => {
-  console.error('❌ Erro fatal ao iniciar aplicação:', error);
-  process.exit(1);
-});
+bootstrap();

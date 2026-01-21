@@ -16,7 +16,7 @@ export const WhatsAppConfig = {
       '--disable-extensions',
       '--disable-plugins',
       '--disable-images',
-      // Removido --disable-javascript pois o WhatsApp Web precisa de JavaScript
+      '--disable-javascript',
       '--disable-background-timer-throttling',
       '--disable-backgrounding-occluded-windows',
       '--disable-renderer-backgrounding',
@@ -29,7 +29,7 @@ export const WhatsAppConfig = {
   },
 
   // Configurações do WhatsApp Web
-  // Removida versão fixa para permitir uso da versão mais recente automaticamente
+  // Removendo webVersion fixa para usar a versão mais recente automaticamente
   // Isso ajuda a evitar problemas de compatibilidade como o erro markedUnread
   webVersionCache: {
     type: 'local' as const,
