@@ -165,94 +165,114 @@ export class WhatsAppService implements OnModuleInit {
         contatoFormatado = this.formatarNumero(contato);
       }
 
-      // Envia a mensagem com tratamento de erro específico
-      try {
-        mensagemEnviada = await this.client.sendMessage(contatoFormatado, mensagem);
-        
-        // Verifica se a mensagem foi enviada corretamente
+      // WORKAROUND: Intercepta o erro markedUnread antes que quebre o fluxo
+      // Usa Promise.allSettled para capturar o erro sem quebrar
+      const resultado = await Promise.allSettled([
+        this.client.sendMessage(contatoFormatado, mensagem)
+      ]);
+
+      const primeiroResultado = resultado[0];
+      
+      if (primeiroResultado.status === 'fulfilled') {
+        mensagemEnviada = primeiroResultado.value;
         if (mensagemEnviada && mensagemEnviada.id) {
           console.log(`Mensagem enviada com sucesso para ${contatoFormatado}`);
           return true;
         } else {
           console.warn('Mensagem enviada mas sem confirmação de ID');
-          return true; // Considera sucesso mesmo sem ID
+          return true;
         }
-      } catch (sendError: any) {
-        // Verifica se o erro é relacionado ao markedUnread (workaround para bug conhecido)
+      } else {
+        // Erro ocorreu, verifica se é markedUnread
+        const erro = primeiroResultado.reason;
         const isMarkedUnreadError = 
-          sendError.message?.includes('markedUnread') ||
-          sendError.message?.includes('Cannot read properties of undefined') ||
-          (sendError.stack && sendError.stack.includes('markedUnread'));
+          erro?.message?.includes('markedUnread') ||
+          erro?.message?.includes('Cannot read properties of undefined') ||
+          (erro?.stack && erro.stack.includes('markedUnread'));
 
         if (isMarkedUnreadError) {
-          console.warn('Erro markedUnread detectado (bug conhecido do whatsapp-web.js). Workaround aplicado...');
-          
-          // WORKAROUND: O erro markedUnread ocorre após o envio da mensagem
-          // quando o sendSeen tenta marcar como lida. A mensagem geralmente já foi enviada.
-          // Aguardamos um pouco e verificamos se conseguimos recuperar a mensagem enviada
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          
-          try {
-            // Tenta buscar o chat usando getChats e filtrando pelo ID
-            const chats = await this.client.getChats();
-            const chat = chats.find(c => c.id._serialized === contatoFormatado);
-            
-            if (chat) {
-              try {
-                // Tenta buscar mensagens recentes do chat
-                const messages = await chat.fetchMessages({ limit: 5 });
-                if (messages && messages.length > 0) {
-                  // Verifica se a última mensagem enviada é a nossa
-                  const recentMessage = messages.find(m => 
-                    m.body === mensagem && 
-                    m.fromMe === true &&
-                    (Date.now() - (m.timestamp * 1000)) < 10000 // Últimos 10 segundos
-                  );
-                  
-                  if (recentMessage) {
-                    console.log(`Mensagem confirmada como enviada (workaround markedUnread) para ${contatoFormatado}`);
-                    return true;
-                  }
-                }
-              } catch (fetchError) {
-                // Se não conseguir buscar mensagens, continua com o workaround
-                console.warn('Não foi possível verificar mensagens, mas assumindo sucesso:', fetchError.message);
-              }
-            }
-            
-            // Se chegou aqui, a mensagem provavelmente foi enviada mas não conseguimos confirmar
-            // Consideramos sucesso para não bloquear o fluxo (o erro markedUnread é após o envio)
-            console.log(`Mensagem provavelmente enviada (workaround markedUnread aplicado) para ${contatoFormatado}`);
-            return true;
-          } catch (verifyError) {
-            // Em caso de erro na verificação, assumimos que a mensagem foi enviada
-            // pois o erro markedUnread geralmente ocorre APÓS o envio bem-sucedido
-            console.warn('Erro ao verificar mensagem, mas assumindo sucesso (markedUnread ocorre após envio):', verifyError.message);
-            return true;
-          }
-        }
-        
-        // Se o erro for relacionado ao serialize, tenta uma abordagem alternativa
-        if (sendError.message && sendError.message.includes('serialize')) {
-          console.warn('Erro de serialização detectado, tentando abordagem alternativa...');
+          console.warn('Erro markedUnread detectado. Tentando enviar novamente com delay...');
           
           // Aguarda um pouco e tenta novamente
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
-          try {
-            mensagemEnviada = await this.client.sendMessage(contatoFormatado, mensagem);
-            console.log(`Mensagem enviada com sucesso (segunda tentativa) para ${contatoFormatado}`);
-            return true;
-          } catch (retryError) {
-            console.error('Erro na segunda tentativa:', retryError);
-            return false;
+          // Tenta novamente
+          const segundaTentativa = await Promise.allSettled([
+            this.client.sendMessage(contatoFormatado, mensagem)
+          ]);
+          
+          const segundoResultado = segundaTentativa[0];
+          if (segundoResultado.status === 'fulfilled') {
+            mensagemEnviada = segundoResultado.value;
+            if (mensagemEnviada && mensagemEnviada.id) {
+              console.log(`Mensagem enviada com sucesso (segunda tentativa) para ${contatoFormatado}`);
+              return true;
+            }
           }
+          
+          // Se ainda falhar, tenta método alternativo
+          console.warn('Segunda tentativa falhou. Tentando método alternativo...');
+          return await this.enviarMensagemAlternativa(contatoFormatado, mensagem);
         } else {
-          throw sendError;
+          // Erro diferente, propaga
+          throw erro;
         }
       }
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Método alternativo para enviar mensagem quando sendMessage falha com markedUnread
+   * Tenta interceptar o erro e enviar novamente com delay maior
+   */
+  private async enviarMensagemAlternativa(contato: string, mensagem: string): Promise<boolean> {
+    try {
+      console.log('Tentando método alternativo de envio com delay maior...');
+      
+      // Aguarda mais tempo para garantir que o estado interno está estável
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Tenta enviar novamente, mas desta vez capturando o erro de forma diferente
+      try {
+        // Usa Promise.race para ter um timeout
+        const sendPromise = this.client.sendMessage(contato, mensagem);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 30000)
+        );
+        
+        const mensagemEnviada = await Promise.race([sendPromise, timeoutPromise]) as Message;
+        
+        if (mensagemEnviada && mensagemEnviada.id) {
+          console.log(`Mensagem enviada com sucesso (método alternativo) para ${contato}`);
+          return true;
+        }
+      } catch (altError: any) {
+        // Se ainda der erro markedUnread, tenta uma última vez após aguardar mais
+        if (altError.message?.includes('markedUnread') || 
+            altError.stack?.includes('markedUnread')) {
+          console.warn('Erro markedUnread persistente. Aguardando mais tempo e tentando última vez...');
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          
+          try {
+            const ultimaTentativa = await this.client.sendMessage(contato, mensagem);
+            if (ultimaTentativa && ultimaTentativa.id) {
+              console.log(`Mensagem enviada na última tentativa para ${contato}`);
+              return true;
+            }
+          } catch (finalError) {
+            console.error('Falha definitiva no envio:', finalError);
+            return false;
+          }
+        }
+        throw altError;
+      }
+      
+      return false;
+    } catch (error: any) {
+      console.error('Erro no método alternativo:', error.message);
       return false;
     }
   }
