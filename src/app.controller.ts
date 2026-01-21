@@ -41,6 +41,19 @@ export class AppController {
     return {};
   }
 
+  @Get('health')
+  healthCheck() {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      whatsapp: {
+        initialized: this.whatsappService.getStatus().isInitialized,
+        authenticated: this.whatsappService.getStatus().isAuthenticated,
+      },
+    };
+  }
+
   @Post('mensagem')
   async enviarMensagem(@Body() mensagemDto: MensagemDto) {
     const { contato, mensagem } = mensagemDto;

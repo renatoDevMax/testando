@@ -22,11 +22,11 @@ export class WhatsAppService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    try {
-      await this.initializeClient();
-    } catch (error) {
+    // Inicializa o cliente em background para não bloquear o servidor
+    // Isso permite que o servidor responda ao healthcheck mesmo se o WhatsApp ainda estiver inicializando
+    this.initializeClient().catch((error) => {
       console.error('Erro ao inicializar o cliente WhatsApp:', error);
-    }
+    });
   }
 
   private async initializeClient() {
