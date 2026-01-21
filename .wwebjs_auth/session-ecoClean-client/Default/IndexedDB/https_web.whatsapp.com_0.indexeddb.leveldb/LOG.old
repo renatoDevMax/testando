@@ -1,4 +1,0 @@
-2025/07/11-18:56:11.481 41f0 Reusing MANIFEST C:\Users\Renato\Desktop\Projetos\Service Notification\servidor-notification-final\.wwebjs_auth\session-ecoClean-client\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/11-18:56:11.481 41f0 Recovering log #41
-2025/07/11-18:56:11.487 41f0 Reusing old log C:\Users\Renato\Desktop\Projetos\Service Notification\servidor-notification-final\.wwebjs_auth\session-ecoClean-client\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000041.log 
-2025/07/11-18:56:12.903 2cc0 Manual compaction at level-0 from '\x00\x1b\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x1c\x00\x00\x00' @ 0 : 0; will stop at (end)

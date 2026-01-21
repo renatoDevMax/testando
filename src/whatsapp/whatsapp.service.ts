@@ -14,7 +14,7 @@ export class WhatsAppService implements OnModuleInit {
     this.client = new Client({
       puppeteer: WhatsAppConfig.puppeteer,
       authStrategy: new LocalAuth(WhatsAppConfig.authStrategy),
-      webVersion: WhatsAppConfig.webVersion,
+      // webVersion removido para usar versão mais recente automaticamente
       webVersionCache: WhatsAppConfig.webVersionCache
     });
 
@@ -264,7 +264,7 @@ export class WhatsAppService implements OnModuleInit {
       this.client = new Client({
         puppeteer: WhatsAppConfig.puppeteer,
         authStrategy: new LocalAuth(WhatsAppConfig.authStrategy),
-        webVersion: WhatsAppConfig.webVersion,
+        // webVersion removido para usar versão mais recente automaticamente
         webVersionCache: WhatsAppConfig.webVersionCache
       });
 
